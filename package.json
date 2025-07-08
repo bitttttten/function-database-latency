@@ -51,7 +51,15 @@
       "ignoreMissing": [
         "prop-types"
       ]
-    }
+    },
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "bufferutil",
+      "esbuild",
+      "prisma",
+      "sharp"
+    ]
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8"

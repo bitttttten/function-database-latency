@@ -9,25 +9,7 @@ import {
 import Head from 'next/head';
 import GithubCorner from '@/components/github-corner';
 
-const NODE_AVAILABLE = [
-  ,
-  'convex',
-  'xata-sdk',
-  'turso',
-  'turso-drizzle',
-  'turso-prisma',
-  'upstash',
-  'neon',
-  'neon-drizzle',
-  'neon-prisma',
-  'shopify'
-];
-const NODE_ONLY = [
-  'supabase-drizzle',
-  'supabase-prisma',
-  'xata-drizzle',
-  'xata-prisma'
-];
+// No longer needed - all runtime types are available for URL testing
 
 type Region = 'regional' | 'global' | 'node';
 
@@ -50,7 +32,7 @@ export default function Page() {
       try {
         const start = Date.now();
         const res = await fetch(
-          `/api/${dataService}-${type}?count=${queryCount}`
+          `/api/url-fetch-${type}?url=${encodeURIComponent(dataService)}&count=${queryCount}`
         );
         const data = await res.json();
         const end = Date.now();
@@ -111,10 +93,10 @@ export default function Page() {
   return (
     <main className="p-6 max-w-5xl flex flex-col gap-3 m-auto">
       <Head>
-        <title>Vercel Functions + Database Latency</title>
+        <title>Vercel Functions + URL Latency Tester</title>
         <meta
           name="description"
-          content="Observe the latency querying different data services from varying compute locations using the `edge` and `node` runtimes of Vercel Functions."
+          content="Observe the latency of fetching URLs from varying compute locations using the `edge` and `node` runtimes of Vercel Functions."
         />
         <link rel="icon" href="/favicon.ico" />
         <meta property="og:image:url" content="/og.png" />
@@ -123,15 +105,15 @@ export default function Page() {
       <GithubCorner url="https://github.com/vercel-labs/function-database-latency" />
 
       <h1 className="text-2xl font-bold">
-        Vercel Functions + Database Latency
+        Vercel Functions + URL Latency Tester
       </h1>
       <p>
-        Observe the latency querying different data services from varying
+        Observe the latency of fetching URLs from varying
         compute locations using the <Code className="text-xs">edge</Code> and{' '}
         <Code className="text-xs">node</Code> runtimes of{' '}
         <a href="https://vercel.com/docs/functions">Vercel Functions</a>. We
-        built this playground to demonstrate different data access patterns and
-        how they can impact latency through sequential data requests (i.e.
+        built this playground to demonstrate different request patterns and
+        how they can impact latency through sequential URL requests (i.e.
         waterfalls).
       </p>
       <p>
@@ -157,147 +139,22 @@ export default function Page() {
       </p>
       <form className="flex flex-col gap-5 bg-gray-100 dark:bg-gray-800 p-5 my-5 rounded">
         <div className="flex flex-col gap-1">
-          <p className="font-bold">Data service</p>
+          <p className="font-bold">URL to Test</p>
           <div className="py-1 inline-flex">
-            <Select
-              data-testid="database-dropdown"
-              className="max-w-xs"
-              placeholder="Select Database"
-              onValueChange={(v) => {
-                // Reset all checkbox values
-                setShouldTestGlobal(!NODE_ONLY.includes(v));
-                setShouldTestRegional(!NODE_ONLY.includes(v));
-                setShouldTestNode(
-                  NODE_ONLY.includes(v) || NODE_AVAILABLE.includes(v)
-                );
-                setDataService(v);
+            <input
+              type="url"
+              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              placeholder="Enter URL to test (e.g., https://example.com)"
+              value={dataService}
+              onChange={(e) => {
+                setDataService(e.target.value);
+                // Enable all test types for URL testing
+                setShouldTestGlobal(true);
+                setShouldTestRegional(true);
+                setShouldTestNode(true);
               }}
-            >
-              <SelectItem data-testid="convex" value="convex" icon={ConvexIcon}>
-                Convex (SDK)
-              </SelectItem>
-              <SelectItem data-testid="neon" value="neon" icon={NeonIcon}>
-                Neon (@neondatabase/serverless driver)
-              </SelectItem>
-              <SelectItem
-                data-testid="neon-drizzle"
-                value="neon-drizzle"
-                icon={NeonIcon}
-              >
-                Neon (w/ Drizzle ORM)
-              </SelectItem>
-              <SelectItem
-                data-testid="neon-prisma"
-                value="neon-prisma"
-                icon={NeonIcon}
-              >
-                Neon (w/ Prisma ORM)
-              </SelectItem>
-              {/* <SelectItem
-                data-testid="planetscale"
-                value="planetscale"
-                icon={CircleStackIcon}
-              >
-                PlanetScale (w/ Kysely)
-              </SelectItem>
-              <SelectItem
-                data-testid="planetscale-prisma"
-                value="planetscale-prisma"
-                icon={CircleStackIcon}
-              >
-                PlanetScale (w/ Prisma ORM)
-              </SelectItem>
-              <SelectItem
-                data-testid="planetscale-drizzle"
-                value="planetscale-drizzle"
-                icon={CircleStackIcon}
-              >
-                PlanetScale (w/ Drizzle ORM)
-              </SelectItem> */}
-              <SelectItem
-                data-testid="shopify"
-                value="shopify"
-                icon={ShoppingCartIcon}
-              >
-                Shopify (Storefront GraphQL API)
-              </SelectItem>
-              <SelectItem
-                data-testid="supabase"
-                value="supabase"
-                icon={BoltIcon}
-              >
-                Supabase (supabase-js)
-              </SelectItem>
-              <SelectItem
-                data-testid="supabase-prisma"
-                value="supabase-prisma"
-                icon={BoltIcon}
-              >
-                Supabase (w/ Prisma ORM)
-              </SelectItem>
-              <SelectItem
-                data-testid="supabase-drizzle"
-                value="supabase-drizzle"
-                icon={BoltIcon}
-              >
-                Supabase (w/ Drizzle ORM)
-              </SelectItem>
-              <SelectItem
-                data-testid="tidb-cloud"
-                value="tidb-cloud"
-                icon={TiDBCloudIcon}
-              >
-                TiDB Cloud (serverless driver)
-              </SelectItem>
-              {/* <SelectItem data-testid="tigris" value="tigris" icon={TigrisIcon}>
-                Tigris (HTTP API)
-              </SelectItem> */}
-              <SelectItem data-testid="turso" value="turso" icon={TursoIcon}>
-                Turso (@libsql/client)
-              </SelectItem>
-              <SelectItem
-                data-testid="turso-drizzle"
-                value="turso-drizzle"
-                icon={TursoIcon}
-              >
-                Turso (w/ Drizzle ORM)
-              </SelectItem>
-              <SelectItem
-                data-testid="turso-prisma"
-                value="turso-prisma"
-                icon={TursoIcon}
-              >
-                Turso (w/ Prisma ORM)
-              </SelectItem>
-              <SelectItem
-                data-testid="upstash"
-                value="upstash"
-                icon={UpstashIcon}
-              >
-                Upstash (SDK)
-              </SelectItem>
-              <SelectItem
-                data-testid="xata-sdk"
-                value="xata-sdk"
-                icon={XataIcon}
-              >
-                Xata (SDK)
-              </SelectItem>
-              <SelectItem
-                data-testid="xata-drizzle"
-                value="xata-drizzle"
-                icon={XataIcon}
-              >
-                Xata (w/ Drizzle ORM)
-              </SelectItem>
-              <SelectItem
-                data-testid="xata-prisma"
-                value="xata-prisma"
-                icon={XataIcon}
-              >
-                Xata (w/ Prisma ORM)
-              </SelectItem>
-            </Select>
+              style={{ minWidth: '400px' }}
+            />
           </div>
         </div>
 
@@ -310,51 +167,44 @@ export default function Page() {
             <Code className="text-xs">region</Code> setting).
           </p>
           <p className="text-sm flex gap-3 flex-wrap gap-y-1">
-            {!NODE_ONLY.includes(dataService) && (
-              <label className="flex items-center gap-2 whitespace-nowrap">
-                <input
-                  type="checkbox"
-                  name="region"
-                  value="global"
-                  checked={shouldTestGlobal}
-                  onChange={(e) => setShouldTestGlobal(e.target.checked)}
-                />{' '}
-                Global function (Edge)
-              </label>
-            )}
-            {!NODE_ONLY.includes(dataService) && (
-              <label className="flex items-center gap-2 whitespace-nowrap">
-                <input
-                  type="checkbox"
-                  name="region"
-                  value="regional"
-                  checked={shouldTestRegional}
-                  onChange={(e) => setShouldTestRegional(e.target.checked)}
-                />{' '}
-                Regional function (Edge | US East)
-              </label>
-            )}
-            {(NODE_AVAILABLE.includes(dataService) ||
-              NODE_ONLY.includes(dataService)) && (
-              <label className="flex items-center gap-2 whitespace-nowrap">
-                <input
-                  type="checkbox"
-                  name="node"
-                  value="node"
-                  checked={shouldTestNode}
-                  onChange={(e) => setShouldTestNode(e.target.checked)}
-                />{' '}
-                Serverless function (Node | US East)
-              </label>
-            )}
+            <label className="flex items-center gap-2 whitespace-nowrap">
+              <input
+                type="checkbox"
+                name="region"
+                value="global"
+                checked={shouldTestGlobal}
+                onChange={(e) => setShouldTestGlobal(e.target.checked)}
+              />{' '}
+              Global function (Edge)
+            </label>
+            <label className="flex items-center gap-2 whitespace-nowrap">
+              <input
+                type="checkbox"
+                name="region"
+                value="regional"
+                checked={shouldTestRegional}
+                onChange={(e) => setShouldTestRegional(e.target.checked)}
+              />{' '}
+              Regional function (Edge | US East)
+            </label>
+            <label className="flex items-center gap-2 whitespace-nowrap">
+              <input
+                type="checkbox"
+                name="node"
+                value="node"
+                checked={shouldTestNode}
+                onChange={(e) => setShouldTestNode(e.target.checked)}
+              />{' '}
+              Serverless function (Node | US East)
+            </label>
           </p>
         </div>
 
         <div className="flex flex-col gap-1">
           <p className="font-bold">Waterfall</p>
           <p className="text-gray-600 dark:text-gray-300 text-sm">
-            Executing complex API routes globally can be slow when the database
-            is single-region, due to having multiple roundtrips to a single
+            Executing multiple sequential requests globally can be slow when the target URL
+            is distant from the user, due to having multiple roundtrips to a single
             server that&apos;s distant from the user.
           </p>
           <p className="text-sm flex gap-3 flex-wrap gap-y-1">
@@ -366,7 +216,7 @@ export default function Page() {
                 onChange={() => setQueryCount(1)}
                 checked={queryCount === 1}
               />{' '}
-              Single query (no waterfall)
+              Single request (no waterfall)
             </label>
             <label className="flex items-center gap-2 whitespace-nowrap">
               <input
@@ -376,7 +226,7 @@ export default function Page() {
                 onChange={() => setQueryCount(2)}
                 checked={queryCount === 2}
               />{' '}
-              2 serial queries
+              2 serial requests
             </label>
             <label className="flex items-center gap-2 whitespace-nowrap">
               <input
@@ -386,7 +236,7 @@ export default function Page() {
                 onChange={() => setQueryCount(5)}
                 checked={queryCount === 5}
               />{' '}
-              5 serial queries
+              5 serial requests
             </label>
           </p>
         </div>
@@ -457,7 +307,7 @@ export default function Page() {
             <Card>
               <Title>Latency distribution (processing time)</Title>
               <Text>
-                This is how long it takes for the function to run the queries
+                This is how long it takes for the function to fetch the URL
                 and return the result. Your internet connections <b>will not</b>{' '}
                 influence these results.
               </Text>
